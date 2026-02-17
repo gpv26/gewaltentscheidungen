@@ -197,235 +197,7 @@ Als du dich der Aufgabe näherst, hörst du Schreie aus einem anderen Raum – j
 
 [[Du gehst sofort selbst in Aktion, um die Aufgabe zu erledigen, ohne Aufsehen zu erregen.]]
 
-[[Du beobachtest zuerst die Kollegen und ihre Reaktionen auf Gewalt, um nicht selbst in Gefahr zu geraten.]]</tw-passagedata><tw-passagedata pid="6" name="Snake" tags="" position="775,1325" size="100,100">&lt;!DOCTYPE html&gt;
-&lt;html lang=&quot;de&quot;&gt;
-&lt;head&gt;
-    &lt;meta charset=&quot;UTF-8&quot;&gt;
-    &lt;title&gt;Neon Snake 2.0 - Twine Safe&lt;/title&gt;
-    &lt;style&gt;
-        body {
-            background-color: #050505;
-            color: #00ffcc;
-            font-family: &#39;Courier New&#39;, Courier, monospace;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 100vh;
-            margin: 0;
-            user-select: none;
-        }
-        h1 { margin: 0 0 20px 0; text-shadow: 0 0 15px #00ffcc; letter-spacing: 5px; }
-        
-        #game-wrapper { position: relative; }
-        
-        canvas {
-            border: 2px solid #00ffcc;
-            box-shadow: 0 0 30px rgba(0, 255, 204, 0.2);
-            background-color: #000;
-            display: block;
-        }
-
-        #ui-layer {
-            position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            background: rgba(0, 0, 0, 0.85);
-            backdrop-filter: blur(2px);
-            transition: opacity 0.3s;
-        }
-
-        .hidden { opacity: 0; pointer-events: none; }
-
-        button {
-            background: transparent;
-            color: #00ffcc;
-            border: 2px solid #00ffcc;
-            padding: 15px 30px;
-            font-size: 20px;
-            font-family: inherit;
-            cursor: pointer;
-            text-transform: uppercase;
-            box-shadow: 0 0 10px #00ffcc;
-            transition: all 0.2s;
-        }
-        button:hover { background: #00ffcc; color: #000; box-shadow: 0 0 30px #00ffcc; }
-
-        .stats {
-            display: flex;
-            justify-content: space-between;
-            width: 400px;
-            margin-top: 10px;
-            font-size: 18px;
-        }
-        .controls-hint {
-            margin-top: 15px;
-            color: #444;
-            font-size: 14px;
-        }
-    &lt;/style&gt;
-&lt;/head&gt;
-&lt;body&gt;
-
-    &lt;h1&gt;NEON SNAKE&lt;/h1&gt;
-    
-    &lt;div id=&quot;game-wrapper&quot;&gt;
-        &lt;canvas id=&quot;gameCanvas&quot; width=&quot;400&quot; height=&quot;400&quot;&gt;&lt;/canvas&gt;
-        &lt;div id=&quot;ui-layer&quot;&gt;
-            &lt;h2 id=&quot;status-text&quot; style=&quot;font-size: 40px; margin-bottom: 20px; text-shadow: 0 0 10px red; display:none&quot;&gt;GAME OVER&lt;/h2&gt;
-            &lt;button id=&quot;startBtn&quot;&gt;Start Game&lt;/button&gt;
-        &lt;/div&gt;
-    &lt;/div&gt;
-
-    &lt;div class=&quot;stats&quot;&gt;
-        &lt;span&gt;Score: &lt;span id=&quot;score&quot;&gt;0&lt;/span&gt;&lt;/span&gt;
-        &lt;span&gt;Best: &lt;span id=&quot;highscore&quot;&gt;0&lt;/span&gt;&lt;/span&gt;
-    &lt;/div&gt;
-
-    &lt;div class=&quot;controls-hint&quot;&gt;Nutze &lt;b&gt;W A S D&lt;/b&gt; zum Steuern&lt;/div&gt;
-
-    &lt;script&gt;
-        // HIER DER FIX: Scope schützen, um globale Variablenkonflikte zu vermeiden
-        (function() {
-            var canvas = document.getElementById(&quot;gameCanvas&quot;);
-            var ctx = canvas.getContext(&quot;2d&quot;);
-            var ui = document.getElementById(&quot;ui-layer&quot;);
-            var statusText = document.getElementById(&quot;status-text&quot;);
-            var startBtn = document.getElementById(&quot;startBtn&quot;);
-            
-            var box = 20;
-            var snake = [];
-            var food = {};
-            var score = 0;
-            var d = null;
-            // Intervall speichern, um es beim Neustart zu löschen
-            var gameLoop; 
-
-            var highscore = localStorage.getItem(&#39;snakeHighscore&#39;) || 0;
-            document.getElementById(&quot;highscore&quot;).innerText = highscore;
-
-            // Event Listener für Start-Button
-            startBtn.onclick = function() {
-                startGame();
-            };
-
-            function startGame() {
-                ui.classList.add(&quot;hidden&quot;);
-                statusText.style.display = &quot;none&quot;;
-                
-                snake = [{ x: 9 * box, y: 10 * box }];
-                score = 0;
-                document.getElementById(&quot;score&quot;).innerText = 0;
-                d = null; // Stillstand bis Tastendruck
-                
-                createFood();
-                
-                if(gameLoop) clearInterval(gameLoop);
-                gameLoop = setInterval(draw, 100);
-            }
-
-            function createFood() {
-                food = {
-                    x: Math.floor(Math.random() * (canvas.width/box)) * box,
-                    y: Math.floor(Math.random() * (canvas.height/box)) * box
-                };
-                for(var i=0; i&lt;snake.length; i++) {
-                    if(snake[i].x === food.x &amp;&amp; snake[i].y === food.y) createFood();
-                }
-            }
-
-            // Event Listener für Tastatur (WASD)
-            document.addEventListener(&quot;keydown&quot;, direction);
-
-            function direction(event) {
-                var key = event.key.toLowerCase();
-                
-                if(key === &quot;a&quot; &amp;&amp; d !== &quot;RIGHT&quot;) d = &quot;LEFT&quot;;
-                else if(key === &quot;w&quot; &amp;&amp; d !== &quot;DOWN&quot;) d = &quot;UP&quot;;
-                else if(key === &quot;d&quot; &amp;&amp; d !== &quot;LEFT&quot;) d = &quot;RIGHT&quot;;
-                else if(key === &quot;s&quot; &amp;&amp; d !== &quot;UP&quot;) d = &quot;DOWN&quot;;
-            }
-
-            function draw() {
-                // Hintergrund löschen
-                ctx.fillStyle = &quot;#000&quot;;
-                ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-                // Grid
-                ctx.strokeStyle = &quot;#111&quot;;
-                for(var i=0; i&lt;canvas.width; i+=box) {
-                    ctx.beginPath(); ctx.moveTo(i,0); ctx.lineTo(i,canvas.height); ctx.stroke();
-                    ctx.beginPath(); ctx.moveTo(0,i); ctx.lineTo(canvas.width,i); ctx.stroke();
-                }
-
-                // Schlange zeichnen
-                for(var i = 0; i &lt; snake.length; i++) {
-                    ctx.fillStyle = (i === 0) ? &quot;#00ffcc&quot; : &quot;rgba(0, 255, 204, 0.5)&quot;;
-                    ctx.shadowBlur = (i === 0) ? 15 : 0;
-                    ctx.shadowColor = &quot;#00ffcc&quot;;
-                    ctx.fillRect(snake[i].x, snake[i].y, box-2, box-2);
-                    ctx.shadowBlur = 0;
-                }
-
-                // Essen zeichnen
-                ctx.fillStyle = &quot;#ff0055&quot;;
-                ctx.shadowBlur = 20;
-                ctx.shadowColor = &quot;#ff0055&quot;;
-                ctx.fillRect(food.x, food.y, box-2, box-2);
-                ctx.shadowBlur = 0;
-
-                if(!d) return; 
-
-                var snakeX = snake[0].x;
-                var snakeY = snake[0].y;
-
-                if(d === &quot;LEFT&quot;) snakeX -= box;
-                if(d === &quot;UP&quot;) snakeY -= box;
-                if(d === &quot;RIGHT&quot;) snakeX += box;
-                if(d === &quot;DOWN&quot;) snakeY += box;
-
-                if(snakeX === food.x &amp;&amp; snakeY === food.y) {
-                    score++;
-                    document.getElementById(&quot;score&quot;).innerText = score;
-                    createFood();
-                } else {
-                    snake.pop();
-                }
-
-                var newHead = { x: snakeX, y: snakeY };
-
-                if(snakeX &lt; 0 || snakeX &gt;= canvas.width || snakeY &lt; 0 || snakeY &gt;= canvas.height || collision(newHead, snake)) {
-                    gameOver();
-                    return;
-                }
-
-                snake.unshift(newHead);
-            }
-
-            function collision(head, array) {
-                for(var i = 0; i &lt; array.length; i++) {
-                    if(head.x === array[i].x &amp;&amp; head.y === array[i].y) return true;
-                }
-                return false;
-            }
-
-            function gameOver() {
-                clearInterval(gameLoop);
-                if(score &gt; highscore) {
-                    highscore = score;
-                    localStorage.setItem(&#39;snakeHighscore&#39;, highscore);
-                    document.getElementById(&quot;highscore&quot;).innerText = highscore;
-                }
-                statusText.style.display = &quot;block&quot;;
-                ui.classList.remove(&quot;hidden&quot;);
-            }
-        })(); // Ende der anonymen Funktion (Scope-Schutz)
-    &lt;/script&gt;
-&lt;/body&gt;
-&lt;/html&gt;</tw-passagedata><tw-passagedata pid="7" name="Weiter" tags="" position="500,100" size="100,100">Es ist dein zweiter Tag im Betrieb.
+[[Du beobachtest zuerst die Kollegen und ihre Reaktionen auf Gewalt, um nicht selbst in Gefahr zu geraten.]]</tw-passagedata><tw-passagedata pid="6" name="Weiter" tags="" position="500,100" size="100,100">Es ist dein zweiter Tag im Betrieb.
 Der Großraumbereich wirkt ruhig, fast zu ruhig. Tastaturen klackern, niemand spricht laut.
 
 Dein Ausbilder Herr Brenner steht am Fenster und telefoniert. Seine Stimme ist gedämpft, aber scharf.
@@ -444,10 +216,10 @@ Als sie deinen Blick bemerkt, schaut sie schnell weg.
 
 Du hast das Gefühl, gleich zu Beginn entscheidet sich, worauf du deinen Fokus legst.
 
-* [[DU beobachtest|Szene1-Beobachten]]
+* [[Szene1-Beobachten]]
 * [[Du folgst Herrn Brenner in den Besprechungsraum.]]
 &lt;img src=&quot;twine/images/bildtest.jpg&quot; alt=&quot;Testbild&quot;&gt;
-</tw-passagedata><tw-passagedata pid="8" name="Am Platz" tags="" position="150,550" size="100,100">Zurück an deinem Platz.
+</tw-passagedata><tw-passagedata pid="7" name="Am Platz" tags="" position="150,550" size="100,100">Zurück an deinem Platz.
 Niemand sagt etwas. Die Stille wirkt organisiert.
 
 Eine Mail von Herrn Brenner:
@@ -472,7 +244,7 @@ Alle warten. Auf dich.
 *[[Du gehst absichtlich pünktlich.]]
 *[[Du leitest die Mail weiter mit Screenshot.]]
 
-</tw-passagedata><tw-passagedata pid="9" name="Du schreibst Brenner zurück" tags="" position="100,700" size="100,100">Mail:
+</tw-passagedata><tw-passagedata pid="8" name="Du schreibst Brenner zurück" tags="" position="100,700" size="100,100">Mail:
 
 Sehr geehrter Herr Brenner,
 
@@ -492,7 +264,7 @@ Durch die Überraschung kann Brenner nichts außer einem Gehäßigen spruch mach
 
 &lt;&lt;timed 8s&gt;&gt;
 *[[Passed]]
-&lt;&lt;/timed&gt;&gt;</tw-passagedata><tw-passagedata pid="10" name="Du gehst absichtlich pünktlich." tags="" position="200,700" size="100,100">Du speicherst deine Arbeit.
+&lt;&lt;/timed&gt;&gt;</tw-passagedata><tw-passagedata pid="9" name="Du gehst absichtlich pünktlich." tags="" position="200,700" size="100,100">Du speicherst deine Arbeit.
 18:00 Uhr. Du stehst auf und gehst.
 
 Niemand hält dich auf.
@@ -525,7 +297,7 @@ Zum Schluss:
 
 
 
-*[[Kündigungs entschluss]]</tw-passagedata><tw-passagedata pid="11" name="Du leitest die Mail weiter mit Screenshot." tags="" position="0,700" size="100,100">Du klickst auf Senden.
+*[[Kündigungs entschluss]]</tw-passagedata><tw-passagedata pid="10" name="Du leitest die Mail weiter mit Screenshot." tags="" position="0,700" size="100,100">Du klickst auf Senden.
 
 Niemand antwortet sofort.
 Die Mail hängt im Raum wie feiner Staub.
@@ -556,7 +328,7 @@ Später wird man sagen:
 Und das stimmt.
 Aber nicht ganz.
 
-*[[Halbes Jahr später]]</tw-passagedata><tw-passagedata pid="12" name="Kündigungs entschluss" tags="" position="200,800" size="100,100">Du sitzt im Büro.
+*[[Halbes Jahr später]]</tw-passagedata><tw-passagedata pid="11" name="Kündigungs entschluss" tags="" position="200,800" size="100,100">Du sitzt im Büro.
 Die Abmahnung liegt vor dir.
 
 Ruhig sagst du:
@@ -584,241 +356,7 @@ Fristlose Kündigung – Arbeitsverweigerung, Teamunfähigkeit.
 Als du gehst, hörst du ihn sagen:
 „Wichtig ist, dass die anderen das sehen.“
 
-[[Ende]]</tw-passagedata><tw-passagedata pid="13" name="Ende" tags="" position="200,1325" size="100,100">&lt;img src=&quot;twine\images\GTA.gif&quot; alt=&quot;Wasted&quot;&gt;
-
-&lt;&lt;timed 5s&gt;&gt;
-*[[Snake]] 
-*[[Pong]]
-&lt;&lt;/timed&gt;&gt;</tw-passagedata><tw-passagedata pid="14" name="Pong" tags="" position="775,1225" size="100,100">&lt;!DOCTYPE html&gt;
-&lt;html lang=&quot;de&quot;&gt;
-&lt;head&gt;
-    &lt;meta charset=&quot;UTF-8&quot;&gt;
-    &lt;title&gt;Neon Pong - Fair Play&lt;/title&gt;
-    &lt;style&gt;
-        body {
-            background-color: #050505;
-            color: #ff00de;
-            font-family: &#39;Courier New&#39;, Courier, monospace;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 100vh;
-            margin: 0;
-            overflow: hidden;
-            cursor: none; /* Maus verstecken für Immersion */
-        }
-        
-        h1 { margin-bottom: 10px; text-shadow: 0 0 10px #ff00de; letter-spacing: 3px; }
-
-        canvas {
-            background: #000;
-            border: 4px solid #ff00de;
-            box-shadow: 0 0 40px rgba(255, 0, 222, 0.3);
-            display: block;
-        }
-        
-        .instructions { margin-top: 15px; color: #666; font-size: 12px; }
-    &lt;/style&gt;
-&lt;/head&gt;
-&lt;body&gt;
-
-    &lt;h1&gt;NEON PONG&lt;/h1&gt;
-    &lt;canvas id=&quot;pong&quot; width=&quot;600&quot; height=&quot;400&quot;&gt;&lt;/canvas&gt;
-    &lt;div class=&quot;instructions&quot;&gt;Steuerung: MAUS | Wer zuerst 5 Punkte hat, gewinnt.&lt;/div&gt;
-
-    &lt;script&gt;
-        // HIER DER FIX: &#39;var&#39; statt &#39;const&#39; verhindert den Absturz in Twine
-        var canvas = document.getElementById(&quot;pong&quot;);
-        var ctx = canvas.getContext(&quot;2d&quot;);
-
-        // Spielobjekte
-        var user = {
-            x: 0, 
-            y: canvas.height/2 - 50, 
-            width: 10, 
-            height: 100, 
-            color: &quot;#00ffcc&quot;, // Cyan
-            score: 0
-        };
-
-        var com = {
-            x: canvas.width - 10, 
-            y: canvas.height/2 - 50, 
-            width: 10, 
-            height: 100, 
-            color: &quot;#ff00de&quot;, // Pink
-            score: 0
-        };
-
-        var net = {
-            x: canvas.width/2 - 1, 
-            y: 0, 
-            width: 2, 
-            height: 10, 
-            color: &quot;#333&quot;
-        };
-
-        var ball = {
-            x: canvas.width/2, 
-            y: canvas.height/2, 
-            radius: 8, 
-            speed: 5, 
-            velocityX: 5, 
-            velocityY: 5, 
-            color: &quot;#fff&quot;
-        };
-
-        // Das Netz zeichnen
-        function drawNet() {
-            for(var i = 0; i &lt;= canvas.height; i+=15) {
-                ctx.fillStyle = net.color;
-                ctx.fillRect(net.x, net.y + i, net.width, net.height);
-            }
-        }
-
-        // Rechtecke zeichnen
-        function drawRect(x, y, w, h, color) {
-            ctx.fillStyle = color;
-            ctx.shadowBlur = 15;
-            ctx.shadowColor = color;
-            ctx.fillRect(x, y, w, h);
-            ctx.shadowBlur = 0;
-        }
-
-        // Kreis zeichnen (Ball)
-        function drawCircle(x, y, r, color) {
-            ctx.fillStyle = color;
-            ctx.beginPath();
-            ctx.arc(x, y, r, 0, Math.PI*2, false);
-            ctx.closePath();
-            ctx.shadowBlur = 10;
-            ctx.shadowColor = color;
-            ctx.fill();
-            ctx.shadowBlur = 0;
-        }
-
-        // Text zeichnen
-        function drawText(text, x, y, color) {
-            ctx.fillStyle = color;
-            ctx.font = &quot;40px Courier New&quot;;
-            ctx.fillText(text, x, y);
-        }
-
-        // Maussteuerung
-        canvas.addEventListener(&quot;mousemove&quot;, getMousePos);
-        function getMousePos(evt) {
-            var rect = canvas.getBoundingClientRect();
-            user.y = evt.clientY - rect.top - user.height/2;
-        }
-
-        // Kollisionserkennung
-        function collision(b, p) {
-            p.top = p.y;
-            p.bottom = p.y + p.height;
-            p.left = p.x;
-            p.right = p.x + p.width;
-
-            b.top = b.y - b.radius;
-            b.bottom = b.y + b.radius;
-            b.left = b.x - b.radius;
-            b.right = b.x + b.radius;
-
-            return b.right &gt; p.left &amp;&amp; b.bottom &gt; p.top &amp;&amp; b.left &lt; p.right &amp;&amp; b.top &lt; p.bottom;
-        }
-
-        function resetBall() {
-            ball.x = canvas.width/2;
-            ball.y = canvas.height/2;
-            ball.speed = 5;
-            ball.velocityX = -ball.velocityX; // Richtung wechseln
-        }
-
-        function update() {
-            // Ball Bewegung
-            ball.x += ball.velocityX;
-            ball.y += ball.velocityY;
-
-            // KI LOGIK (Menschlich/Fair)
-            // 1. Bot reagiert nur, wenn Ball auf ihn zukommt
-            if(ball.velocityX &gt; 0) {
-                // 2. Zufallsfaktor: Bot zielt nicht immer perfekt auf die Mitte seines Schlägers
-                // Das simuliert &quot;Reaktionsfehler&quot;
-                var mistake = Math.random() * 20 - 10; 
-                
-                // 3. Schwierigkeitsgrad (0.07 ist gut spielbar, nicht unmöglich)
-                var computerLevel = 0.07; 
-                
-                com.y += ((ball.y + mistake) - (com.y + com.height/2)) * computerLevel;
-            } else {
-                // Langsam zur Mitte zurückkehren wenn Ball weg ist
-                var centerSpeed = 0.04;
-                com.y += ((canvas.height/2 - com.height/2) - com.y) * centerSpeed;
-            }
-
-            // Wände (oben/unten)
-            if(ball.y + ball.radius &gt; canvas.height || ball.y - ball.radius &lt; 0) {
-                ball.velocityY = -ball.velocityY;
-            }
-
-            // Welcher Spieler?
-            var player = (ball.x &lt; canvas.width/2) ? user : com;
-
-            if(collision(ball, player)) {
-                // Ball trifft Paddel
-                var collidePoint = (ball.y - (player.y + player.height/2));
-                collidePoint = collidePoint / (player.height/2);
-
-                var angleRad = (Math.PI/4) * collidePoint;
-
-                // Richtung ändern
-                var direction = (ball.x &lt; canvas.width/2) ? 1 : -1;
-                
-                ball.velocityX = direction * ball.speed * Math.cos(angleRad);
-                ball.velocityY = ball.speed * Math.sin(angleRad);
-
-                // Spiel schneller machen bei jedem Treffer
-                ball.speed += 0.3;
-            }
-
-            // Punkt erzielt?
-            if(ball.x - ball.radius &lt; 0) {
-                com.score++;
-                resetBall();
-            } else if(ball.x + ball.radius &gt; canvas.width) {
-                user.score++;
-                resetBall();
-            }
-        }
-
-        function render() {
-            // Bildschirm leeren
-            drawRect(0, 0, canvas.width, canvas.height, &quot;#000&quot;);
-
-            drawNet();
-            drawText(user.score, canvas.width/4, canvas.height/5, &quot;#fff&quot;);
-            drawText(com.score, 3*canvas.width/4, canvas.height/5, &quot;#fff&quot;);
-
-            drawRect(user.x, user.y, user.width, user.height, user.color);
-            drawRect(com.x, com.y, com.width, com.height, com.color);
-            drawCircle(ball.x, ball.y, ball.radius, ball.color);
-        }
-
-        // Loop säubern vor Neustart (Wichtig für Twine/Reloads)
-        if(window.gameInterval) clearInterval(window.gameInterval);
-
-        function game() {
-            update();
-            render();
-        }
-
-        var framePerSecond = 50;
-        // Intervall global speichern, damit wir es beim Neuladen löschen können
-        window.gameInterval = setInterval(game, 1000/framePerSecond);
-    &lt;/script&gt;
-&lt;/body&gt;
-&lt;/html&gt;</tw-passagedata><tw-passagedata pid="15" name="Passed" tags="" position="325,1400" size="100,100">*[[Snake]] 
-*[[Pong]]</tw-passagedata><tw-passagedata pid="16" name="Halbes Jahr später" tags="" position="0,850" size="100,100">Ein halbes Jahr ist vergangen.
+[[Ende|Passed]]</tw-passagedata><tw-passagedata pid="12" name="Passed" tags="" position="325,1400" size="100,100">Ende</tw-passagedata><tw-passagedata pid="13" name="Halbes Jahr später" tags="" position="0,850" size="100,100">Ein halbes Jahr ist vergangen.
 Nicht laut. Nicht plötzlich.
 Sondern tropfend.
 
@@ -859,7 +397,7 @@ Du stehst auf gehst und kommst nie wieder.
 
 &lt;&lt;timed 8s&gt;&gt;
 *[[Passed]]
-&lt;&lt;/timed&gt;&gt;</tw-passagedata><tw-passagedata pid="17" name="Öffentlich" tags="" position="575,550" size="100,100">Die Tür geht auf.
+&lt;&lt;/timed&gt;&gt;</tw-passagedata><tw-passagedata pid="14" name="Öffentlich" tags="" position="575,550" size="100,100">Die Tür geht auf.
 Zwei Kollegen kommen rein. Bleiben stehen. Sehen alles.
 
 Brenner stößt dich abrupt aus dem Stuhl.
@@ -880,7 +418,7 @@ Die Kollegen schauen weg.
 Einer zieht leicht die Schultern hoch.
 Als wäre das Wetter schlecht.
 
-*[[Polizei]]</tw-passagedata><tw-passagedata pid="18" name="verdecktegwealt" tags="" position="725,550" size="100,100">Brenner lässt von dir ab, als wäre nichts passiert.
+*[[Polizei]]</tw-passagedata><tw-passagedata pid="15" name="verdecktegwealt" tags="" position="725,550" size="100,100">Brenner lässt von dir ab, als wäre nichts passiert.
 
 „Du gehst jetzt mit“, sagt er.
 
@@ -908,7 +446,7 @@ Richtet sein Jackett.
 
 „Morgen sehen wir, was du gelernt hast.“
 
-*[[Polizei]]</tw-passagedata><tw-passagedata pid="19" name="Polizei" tags="" position="650,675" size="100,100">Der Raum ist derselbe.
+*[[Polizei]]</tw-passagedata><tw-passagedata pid="16" name="Polizei" tags="" position="650,675" size="100,100">Der Raum ist derselbe.
 Nur du bist es nicht mehr.
 
 Egal ob vor Zeugen oder im Keller – die Gewalt war real.
@@ -931,7 +469,7 @@ Niemand antwortet.
 Und zum ersten Mal seit dem zweiten Tag
 ist der Raum nicht mehr zu klein.
 
-*[[Verbesserung]]</tw-passagedata><tw-passagedata pid="20" name="Verbesserung" tags="" position="650,825" size="100,100">Nach Brenners Abgang ist es erst still.
+*[[Verbesserung]]</tw-passagedata><tw-passagedata pid="17" name="Verbesserung" tags="" position="650,825" size="100,100">Nach Brenners Abgang ist es erst still.
 Zu still.
 
 Niemand weiß, was man sagen darf.
@@ -959,7 +497,7 @@ Und diesmal
 bleibt sie oben,
 ohne dass etwas passiert.
 
-*[[Passed]]</tw-passagedata><tw-passagedata pid="21" name="Du gehst sofort selbst in Aktion, um die Aufgabe zu erledigen, ohne Aufsehen zu erregen." tags="" position="325,550" size="100,100">Du gehst an die Arbeit.
+*[[Passed]]</tw-passagedata><tw-passagedata pid="18" name="Du gehst sofort selbst in Aktion, um die Aufgabe zu erledigen, ohne Aufsehen zu erregen." tags="" position="325,550" size="100,100">Du gehst an die Arbeit.
 Ruhig. Zu ruhig für jemanden, der gerade gestoßen wurde.
 
 Du erledigst die Aufgabe fehlerfrei.
@@ -979,7 +517,7 @@ Aber du merkst es dir.
 Am Ende der Schicht sagt er nur:
 „Geht doch.“
 
-*[[mehr]]</tw-passagedata><tw-passagedata pid="22" name="Du beobachtest zuerst die Kollegen und ihre Reaktionen auf Gewalt, um nicht selbst in Gefahr zu geraten." tags="" position="450,550" size="100,100">Du bleibst erst im Schatten, die Hände in den Taschen.
+*[[mehr]]</tw-passagedata><tw-passagedata pid="19" name="Du beobachtest zuerst die Kollegen und ihre Reaktionen auf Gewalt, um nicht selbst in Gefahr zu geraten." tags="" position="450,550" size="100,100">Du bleibst erst im Schatten, die Hände in den Taschen.
 Dein Herz rast. Schreie aus dem Nebenzimmer, Schritte, Türen, die hart ins Schloss fallen.
 Die Kollegen reagieren unterschiedlich:
 
@@ -992,7 +530,7 @@ Brenner geht herum, tippt hier, stößt dort – und niemand widerspricht.
 Du merkst: Widerstand kostet, Aufmerksamkeit wird bestraft.
 Aber die Beobachtungen zählen.
 
-*[[Konsequenz]]</tw-passagedata><tw-passagedata pid="23" name="mehr" tags="" position="325,700" size="100,100">Es bleibt nicht bei diesem einen Mal.
+*[[Konsequenz]]</tw-passagedata><tw-passagedata pid="20" name="mehr" tags="" position="325,700" size="100,100">Es bleibt nicht bei diesem einen Mal.
 Aber es bleibt kontrolliert.
 
 Du beginnst, alles aufzuschreiben.
@@ -1012,7 +550,7 @@ Ein anderer nickt nur. Einmal.
 
 Mehr brauchst du nicht.
 
-*[[Prüfung]]</tw-passagedata><tw-passagedata pid="24" name="Prüfung" tags="" position="325,850" size="100,100">Zwei Wochen später.
+*[[Prüfung]]</tw-passagedata><tw-passagedata pid="21" name="Prüfung" tags="" position="325,850" size="100,100">Zwei Wochen später.
 
 Ein externer Termin wird angekündigt.
 „Routineprüfung“, heißt es.
@@ -1035,7 +573,7 @@ Ordentlich.
 Niemand unterbricht dich.
 
 *[[Brenner]]
-</tw-passagedata><tw-passagedata pid="25" name="Brenner" tags="" position="325,1000" size="100,100">Brenner lacht kurz.
+</tw-passagedata><tw-passagedata pid="22" name="Brenner" tags="" position="325,1000" size="100,100">Brenner lacht kurz.
 „Missverständnisse“, sagt er.
 „Härterer Ton, mehr nicht.“
 
@@ -1055,7 +593,7 @@ Und noch eine.
 
 Brenner sagt nichts mehr.
 
-[[Das Ende]]</tw-passagedata><tw-passagedata pid="26" name="Das Ende" tags="" position="475,1200" size="100,100">Am nächsten Tag ist sein Büro leer.
+[[Das Ende]]</tw-passagedata><tw-passagedata pid="23" name="Das Ende" tags="" position="475,1200" size="100,100">Am nächsten Tag ist sein Büro leer.
 Keine Abschiedsmail.
 Kein Kommentar.
 
@@ -1075,7 +613,7 @@ Du hebst die Hand.
 
 Und niemand stößt dich vom Stuhl.
 
-*[[Passed]]</tw-passagedata><tw-passagedata pid="27" name="Konsequenz" tags="" position="450,700" size="100,100">Am Ende der Schicht ziehst du dich zurück.
+*[[Passed]]</tw-passagedata><tw-passagedata pid="24" name="Konsequenz" tags="" position="450,700" size="100,100">Am Ende der Schicht ziehst du dich zurück.
 Du hast Details gesammelt: wer was sah, wie er reagierte, welche Situationen eskalierten.
 Aber niemand traut sich, offen zu reden.
 Nicht einmal du.
@@ -1083,14 +621,14 @@ Nicht einmal du.
 Du fragst dich: Soll ich das melden?
 Die Angst ist da – aber auch die Erkenntnis, dass alles aufschreiben allein nicht ausreicht.
 
-*[[Eskalation]]</tw-passagedata><tw-passagedata pid="28" name="Eskalation" tags="" position="450,850" size="100,100">Die Tage vergehen. Brenner bleibt streng, manchmal aggressiv, manchmal nur subtil einschüchternd.
+*[[Eskalation]]</tw-passagedata><tw-passagedata pid="25" name="Eskalation" tags="" position="450,850" size="100,100">Die Tage vergehen. Brenner bleibt streng, manchmal aggressiv, manchmal nur subtil einschüchternd.
 Du hast nichts getan.
 Doch du bemerkst, dass einige Kollegen beginnen, sich innerlich zurückzuziehen, krankmelden, oder die Überstunden verweigern.
 
 Du meldest nichts offiziell. Die Notizen liegen zu Hause.
 Ein kleiner Sieg? Vielleicht. Aber Brenner merkt die Distanz. Seine Blicke bohren sich in dich, die Stimmung wird kälter.
 
-*[[Ende2]]</tw-passagedata><tw-passagedata pid="29" name="Ende2" tags="" position="450,1000" size="100,100">Monate später: Brenner ist immer noch da.
+*[[Ende2]]</tw-passagedata><tw-passagedata pid="26" name="Ende2" tags="" position="525,1325" size="100,100">Monate später: Brenner ist immer noch da.
 Du bist vorsichtiger geworden, gehst Konflikten aus dem Weg.
 Die Situation hat sich nicht verbessert – nur die Überlebensstrategie der meisten hat sich angepasst.
 Ergebnisse der Firma stagnieren, Unzufriedenheit steigt. Einige Kollegen kündigen, andere halten aus – aber Brenner bleibt in Position, geschützt durch interne Machtstrukturen.
@@ -1120,10 +658,10 @@ Als sie deinen Blick bemerkt, schaut sie schnell weg.
 
 Du hast das Gefühl, gleich zu Beginn entscheidet sich, worauf du deinen Fokus legst.
 
-- [[Du folgst Herrn Brenner in den Besprechungsraum.|Szene1Folgen]]
+
 - [[Du bleibst kurz im Büro und beobachtest die Situation unter den Azubis.|Szene1-Beobachten]]
 
-</tw-passagedata><tw-passagedata pid="30" name="Szene1Folgen" tags="" position="100,400" size="100,100"></tw-passagedata><tw-passagedata pid="31" name="Szene1-Beobachten" tags="" position="1125,225" size="100,100">Du bleibst an deinem Platz sitzen und öffnest eine Datei, ohne wirklich hineinzusehen.
+</tw-passagedata><tw-passagedata pid="27" name="Szene1-Beobachten" tags="" position="1125,225" size="100,100">Du bleibst an deinem Platz sitzen und öffnest eine Datei, ohne wirklich hineinzusehen.
 Niemand beachtet dich weiter – genau das gibt dir die Möglichkeit, genauer hinzuhören.
 
 &lt;img src=&quot;twine/images/Szene1-MaraIgnoriert.jpg&quot; alt=&quot;MaraIgnoriert&quot;&gt;
@@ -1156,7 +694,7 @@ in der viele später sagen würden: „So schlimm war es doch gar nicht.“
 
 - [[Du greifst direkt und offen ein.|Szene1-MaraHilfeDirekt]]
 
-- [[Du entscheidest zu helfen, ohne jedoch direkt einzugreifen.|Szene1-MaraHilfeIndirekt]]</tw-passagedata><tw-passagedata pid="32" name="Szene1-NichtsTun" tags="" position="800,375" size="100,100">Du entscheidest dich, heute nichts zu sagen.
+- [[Du entscheidest zu helfen, ohne jedoch direkt einzugreifen.|Szene1-MaraHilfeIndirekt]]</tw-passagedata><tw-passagedata pid="28" name="Szene1-NichtsTun" tags="" position="800,375" size="100,100">Du entscheidest dich, heute nichts zu sagen.
 Nicht, weil es dir egal ist – sondern weil du dir unsicher bist, ob es „wirklich schlimm genug“ ist. Außerdem bist du doch gerade neu hier und willst nicht die gesamte Aufmerksamkeit auf dich ziehen.
 
 .
@@ -1179,7 +717,7 @@ Du hattest die Situation gesehen.
 Du hättest etwas sagen können.
 
 - [[Du redest dir ein, dass es nicht deine Aufgabe sei und nimmst dir vor, es ein andermal anzusprechen.|Szene1-MaraEnde]]
-</tw-passagedata><tw-passagedata pid="33" name="Szene1-MaraEnde" tags="" position="925,675" size="100,100">&lt;img src=&quot;twine/images/Szene1-MaraWeg.jpg&quot; alt=&quot;MaraIstWeg&quot;&gt;
+</tw-passagedata><tw-passagedata pid="29" name="Szene1-MaraEnde" tags="" position="925,675" size="100,100">&lt;img src=&quot;twine/images/Szene1-MaraWeg.jpg&quot; alt=&quot;MaraIstWeg&quot;&gt;
 
 Ein paar Tage später ist Maras Platz leer.
 Jemand sagt beiläufig: „Sie ist jetzt in einer anderen Abteilung.“
@@ -1200,7 +738,7 @@ Aber mit der Ekenntnis, dass &lt;b&gt;Nicht-Handeln&lt;/b&gt; Konsequenzen hat.
 
 
 
-[[Willst du in der Zeit zurück und deine Entscheidung ändern?|Szene1-Beobachten]]</tw-passagedata><tw-passagedata pid="34" name="Szene1-MaraHilfeIndirekt" tags="" position="1125,525" size="100,100">Du räusperst dich leise und meldest dich zu Wort, ohne aufzustehen.
+[[Willst du in der Zeit zurück und deine Entscheidung ändern?|Szene1-Beobachten]]</tw-passagedata><tw-passagedata pid="30" name="Szene1-MaraHilfeIndirekt" tags="" position="1125,525" size="100,100">Du räusperst dich leise und meldest dich zu Wort, ohne aufzustehen.
 Dein Blick bleibt auf dem Bildschirm.
 
 „Ähm … ich glaube, der Punkt von Mara ist wichtig für die Aufgabe“, sagst du ruhig.
@@ -1226,7 +764,7 @@ Du hast eingegriffen, ohne aufzufallen.
 Und trotzdem hast du etwas verändert.
 
 
-[[Kurze Zeit später.|Szene1-MaraEndeUndFortsetzung]]</tw-passagedata><tw-passagedata pid="35" name="Szene1-MaraHilfeDirekt" tags="" position="1300,525" size="100,100">Du drehst dich vom Bildschirm weg und stehst leicht vom Stuhl auf.
+[[Kurze Zeit später.|Szene1-MaraEndeUndFortsetzung]]</tw-passagedata><tw-passagedata pid="31" name="Szene1-MaraHilfeDirekt" tags="" position="1300,525" size="100,100">Du drehst dich vom Bildschirm weg und stehst leicht vom Stuhl auf.
 Deine Stimme ist ruhig, aber deutlich.
 
 „Lass sie bitte ausreden“, sagst du zu Tom.
@@ -1259,7 +797,7 @@ Und es wird nicht folgenlos bleiben.
 
 
 
-[[Kurze Zeit später.|Szene1-MaraEndeUndFortsetzung]]</tw-passagedata><tw-passagedata pid="36" name="Szene1-MaraHilfeBadEnd" tags="" position="1400,650" size="100,100">Du atmest einmal tief ein.
+[[Kurze Zeit später.|Szene1-MaraEndeUndFortsetzung]]</tw-passagedata><tw-passagedata pid="32" name="Szene1-MaraHilfeBadEnd" tags="" position="1400,650" size="100,100">Du atmest einmal tief ein.
 
 „Vielleicht, weil hier ständig jemand meint, andere kleinhalten zu müssen“, sagst du.
 „Und weil das langsam peinlich ist.“
@@ -1316,7 +854,7 @@ Tom behauptet, du hättest angefangen.
 Du behauptest das Gegenteil.
 
 Am Ende heißt es:
-„Beide haben sich falsch verhalten.“</tw-passagedata><tw-passagedata pid="37" name="Szene1-MaraEndeUndFortsetzung" tags="" position="1175,800" size="100,100">Die Situation löst sich schließlich auf.
+„Beide haben sich falsch verhalten.“</tw-passagedata><tw-passagedata pid="33" name="Szene1-MaraEndeUndFortsetzung" tags="" position="1175,800" size="100,100">Die Situation löst sich schließlich auf.
 Ob durch ein ruhiges Wort zur richtigen Zeit oder durch ein offeneres Eingreifen –
 das Gespräch kommt wieder in Gang, wenn auch spürbar gedämpfter als zuvor.
 
@@ -1335,7 +873,7 @@ Auf die eine oder andere Weise.
 Und auch wenn niemand es kommentiert, war es &lt;b&gt;nicht bedeutungslos&lt;/b&gt;.
 
 
-[[Es ist Nachmittag und Herr Brenner bittet dich zu sich.|Szene2-Start]]</tw-passagedata><tw-passagedata pid="38" name="Szene2-Start" tags="" position="1175,1000" size="100,100">Am Nachmittag bittet dich Herr Brenner spontan zu sich.
+[[Es ist Nachmittag und Herr Brenner bittet dich zu sich.|Szene2-Start]]</tw-passagedata><tw-passagedata pid="34" name="Szene2-Start" tags="" position="1175,1000" size="100,100">Am Nachmittag bittet dich Herr Brenner spontan zu sich.
 
 „Komm mal kurz mit“, sagt er knapp.
 
@@ -1373,7 +911,7 @@ Nicht offiziell. Aber spürbar.
 
 - [[Du sprichst das Frühere direkt an.|Szene2-DirektAnsprechen]]
 
-- [[Du bleibst sachlich und versuchst Tom ins Boot zu holen.|Szene2-Sachlich]]</tw-passagedata><tw-passagedata pid="39" name="Szene2-AbstandStill" tags="" position="825,1100" size="100,100">Du nickst kurz und konzentrierst dich ausschließlich auf deine Aufgaben.
+- [[Du bleibst sachlich und versuchst Tom ins Boot zu holen.|Szene2-Sachlich]]</tw-passagedata><tw-passagedata pid="35" name="Szene2-AbstandStill" tags="" position="825,1100" size="100,100">Du nickst kurz und konzentrierst dich ausschließlich auf deine Aufgaben.
 Keine Kommentare, keine Rückfragen, kein Blickkontakt.
 
 Der Tag vergeht ruhig.
@@ -1386,7 +924,7 @@ Am nächsten Morgen stellt Brenner fest, dass die Arbeit nicht richtig abgestimm
 .
 
 Du hast Konflikte vermieden, aber auch jede Chance vertan, Einfluss zu nehmen.
-Deine Rolle bleibt passiv.</tw-passagedata><tw-passagedata pid="40" name="Szene2-DirektAnsprechen" tags="" position="1100,1175" size="100,100">Du atmest tief durch.
+Deine Rolle bleibt passiv.</tw-passagedata><tw-passagedata pid="36" name="Szene2-DirektAnsprechen" tags="" position="1100,1175" size="100,100">Du atmest tief durch.
 „Wegen vorhin … das war nicht gegen dich gemeint“, sagst du leise.
 
 Tom lacht kurz.
@@ -1396,7 +934,7 @@ Er steht auf, holt sich einen Kaffee und lässt dich sitzen.
 Die Zusammenarbeit kommt nicht zustande.
 
 Der Versuch, zu klären, kommt zu früh –
-und verschärft die Distanz.</tw-passagedata><tw-passagedata pid="41" name="Szene2-Sachlich" tags="" position="1400,1150" size="100,100">Du zeigst auf den Bildschirm.
+und verschärft die Distanz.</tw-passagedata><tw-passagedata pid="37" name="Szene2-Sachlich" tags="" position="1400,1150" size="100,100">Du zeigst auf den Bildschirm.
 „Wenn wir das aufteilen, sind wir schneller fertig“, sagst du ruhig.
 „Du übernimmst den ersten Teil, ich den zweiten – danach schauen wir gemeinsam drüber.“
 
@@ -1443,14 +981,14 @@ Zurück bleibt Stille.
 
 - [[Du sprichst es sachlich an.|Szene2-SachlichW]]
 
-- [[Du meldest es sofort bei Brenner.|Szene2-SachlichPetze]]</tw-passagedata><tw-passagedata pid="42" name="Szene2-SachlichNegEnde" tags="" position="1200,1400" size="100,100">Du sagst nichts.
+- [[Du meldest es sofort bei Brenner.|Szene2-SachlichPetze]]</tw-passagedata><tw-passagedata pid="38" name="Szene2-SachlichNegEnde" tags="" position="1200,1400" size="100,100">Du sagst nichts.
 Es ist dir wichtiger, dass es ruhig bleibt.
 
 Später merkst du:
 Deine Arbeit verschwindet regelmäßig im Hintergrund.
 Du bleibst „der Mitläufer“.
 
-Du hast Konflikt vermieden, aber auf Kosten deiner eigenen Position.</tw-passagedata><tw-passagedata pid="43" name="Szene2-SachlichW" tags="" position="1450,1300" size="100,100">Du bleibst ruhig.
+Du hast Konflikt vermieden, aber auf Kosten deiner eigenen Position.</tw-passagedata><tw-passagedata pid="39" name="Szene2-SachlichW" tags="" position="1450,1300" size="100,100">Du bleibst ruhig.
 „Beim nächsten Mal sag bitte kurz Bescheid, bevor du meinen Teil änderst“, sagst du.
 „Dann stehen wir beide dafür.“
 
@@ -1463,7 +1001,7 @@ Dann nickt er.
 Es ist kein Frieden.
 Aber ein Arbeitsabkommen.
 
-[[Ein paar Wochen später..|Szene3-Start]]</tw-passagedata><tw-passagedata pid="44" name="Szene2-SachlichPetze" tags="" position="1675,1300" size="100,100">Du gehst direkt zu Brenner.
+[[Ein paar Wochen später..|Szene3-Start]]</tw-passagedata><tw-passagedata pid="40" name="Szene2-SachlichPetze" tags="" position="1675,1300" size="100,100">Du gehst direkt zu Brenner.
 
 Er hört zu, wirkt genervt.
 „Klärt das unter euch“, sagt er.
@@ -1473,7 +1011,7 @@ Tom weiß sofort, dass du es warst.
 
 Kein Schutz.
 Kein Rückhalt.
-Nur mehr Spannung.</tw-passagedata><tw-passagedata pid="45" name="Szene3-Start" tags="" position="1325,1575" size="100,100">Ein paar Wochen sind vergangen.
+Nur mehr Spannung.</tw-passagedata><tw-passagedata pid="41" name="Szene3-Start" tags="" position="1325,1575" size="100,100">Ein paar Wochen sind vergangen.
 Du hast dich eingearbeitet, kennst die Abläufe, die Gesichter – und auch die unausgesprochenen Regeln.
 
 An diesem Morgen hängt ein Zettel am schwarzen Brett:
@@ -1496,7 +1034,7 @@ Die Frage ist nur: wie du damit umgehst.
 
 - [[Du sprichst ein konkretes Problem sachlich an.|Szene3-Sachlich]]
 
-- [[Du nimmst &quot;offen&quot; sehr wörtlich.|Szene3-offen]]</tw-passagedata><tw-passagedata pid="46" name="Szene3-offen" tags="" position="1125,1700" size="100,100">Du meldest dich.
+- [[Du nimmst &quot;offen&quot; sehr wörtlich.|Szene3-offen]]</tw-passagedata><tw-passagedata pid="42" name="Szene3-offen" tags="" position="1125,1700" size="100,100">Du meldest dich.
 
 „Also ehrlich gesagt“, sagst du,
 „die Stimmung hier ist manchmal wie in einer Reality‑Show – nur ohne Preisgeld.“
@@ -1511,7 +1049,7 @@ Herr Brenner blinzelt irritiert.
 Die Runde endet schneller als geplant.
 
 Du hast für Unterhaltung gesorgt, aber nicht für Veränderung.
-Dein Feedback wird noch Wochen später als „der Reality‑Show‑Kommentar“ zitiert.</tw-passagedata><tw-passagedata pid="47" name="Szene3-Sachlich" tags="" position="1500,1700" size="100,100">Du meldest dich ruhig.
+Dein Feedback wird noch Wochen später als „der Reality‑Show‑Kommentar“ zitiert.</tw-passagedata><tw-passagedata pid="43" name="Szene3-Sachlich" tags="" position="1500,1700" size="100,100">Du meldest dich ruhig.
 
 „Mir fällt auf, dass manche im Team öfter unterbrochen oder nicht ernst genommen werden“, sagst du.
 „Das macht es schwer, sich einzubringen.“
@@ -1528,7 +1066,7 @@ Diesmal nicht nur erleichtert – sondern dankbar.
 
 - [[Du weichst aus.|Szene3-Ausweich]]
 
-- [[Du bleibst sachlich und konkret.|Szene3-SachlichKonkret]]</tw-passagedata><tw-passagedata pid="48" name="Szene3-Ausweich" tags="" position="1350,1850" size="100,100">„Nein, eher allgemein“, sagst du.
+- [[Du bleibst sachlich und konkret.|Szene3-SachlichKonkret]]</tw-passagedata><tw-passagedata pid="44" name="Szene3-Ausweich" tags="" position="1350,1850" size="100,100">„Nein, eher allgemein“, sagst du.
 „Ist mir nur aufgefallen.“
 
 Brenner nickt.
@@ -1538,7 +1076,7 @@ Das Thema wird gewechselt.
 
 Du hast ein Problem angesprochen, aber es nicht greifbar gemacht.
 Alles bleibt, wie es war.
-</tw-passagedata><tw-passagedata pid="49" name="Szene3-SachlichKonkret" tags="" position="1650,1850" size="100,100">Du bleibst ruhig.
+</tw-passagedata><tw-passagedata pid="45" name="Szene3-SachlichKonkret" tags="" position="1650,1850" size="100,100">Du bleibst ruhig.
 „Vorhin bei der Projektarbeit wurde Mara mehrmals unterbrochen“, sagst du.
 „Danach hat sie kaum noch etwas gesagt.“
 
@@ -1578,7 +1116,7 @@ Er tut so, als würde er etwas suchen, hört aber offensichtlich zu.
 - [[Du verschränkst die Arme und antwortest: „Wenn du dich bloßgestellt fühlst, liegt das vielleicht daran, dass sich dein Verhalten endlich mal jemand gemerkt hat.“|Szene3-Eskalation]]
 
 - [[„Es ging nicht um dich“, sagst du ruhig. „Sondern darum, dass hier alle ausreden können. Mehr nicht.“|Szene3-Klärung]]
-</tw-passagedata><tw-passagedata pid="50" name="Szene3-Eskalation" tags="" position="1525,2025" size="100,100">Du verschränkst die Arme.
+</tw-passagedata><tw-passagedata pid="46" name="Szene3-Eskalation" tags="" position="1525,2025" size="100,100">Du verschränkst die Arme.
 „Wenn du dich bloßgestellt fühlst, liegt das vielleicht daran,
 dass sich dein Verhalten endlich mal jemand gemerkt hat.“
 
@@ -1615,7 +1153,7 @@ Lange. Müde.
 
 Er schaut euch beide an.
 „Wenn Feedback in Comedy abrutscht,
-hat hier niemand etwas gewonnen.“</tw-passagedata><tw-passagedata pid="51" name="Szene3-Klärung" tags="" position="1800,2025" size="100,100">„Es ging nicht um dich“, sagst du ruhig.
+hat hier niemand etwas gewonnen.“</tw-passagedata><tw-passagedata pid="47" name="Szene3-Klärung" tags="" position="1800,2025" size="100,100">„Es ging nicht um dich“, sagst du ruhig.
 „Sondern darum, dass hier alle ausreden können. Mehr nicht.“
 
 Tom sagt nichts.
@@ -1642,7 +1180,7 @@ Manchmal besteht sie nur daraus, nicht zurückzuschlagen, nicht zu spotten,
 sondern klar zu bleiben, wenn es unangenehm wird.
 
 
-[[Ein paar Tage später.|Szene4-StartLaptop]]</tw-passagedata><tw-passagedata pid="52" name="Szene4-StartLaptop" tags="" position="1675,2200" size="100,100">Der Tag zieht sich.
+[[Ein paar Tage später.|Szene4-StartLaptop]]</tw-passagedata><tw-passagedata pid="48" name="Szene4-StartLaptop" tags="" position="1675,2200" size="100,100">Der Tag zieht sich.
 Im Büro ist es ungewohnt still, nur das Summen der Rechner bleibt.
 
 Du gehst kurz zum Druckerraum.
@@ -1672,7 +1210,7 @@ Das ist gezieltes Bloßstellen.
 
 - [[Du bleibst ruhig und setzt eine Grenze.|Szene4-RuhigGrenze]]
 
-- [[Du trollst zurück.|Szene4-Troll]]</tw-passagedata><tw-passagedata pid="53" name="Szene4-VollRein" tags="" position="1950,2350" size="100,100">Du reißt den Laptop herum und drehst ihn zu dir.
+- [[Du trollst zurück.|Szene4-Troll]]</tw-passagedata><tw-passagedata pid="49" name="Szene4-VollRein" tags="" position="1950,2350" size="100,100">Du reißt den Laptop herum und drehst ihn zu dir.
 „Seid ihr ernsthaft so hängen geblieben?!“
 
 Kevin versucht sofort, ihn zurückzuziehen.
@@ -1698,7 +1236,7 @@ Statt ihr Verhalten zu stoppen, hast du Sachschaden verursacht.
 Jetzt geht’s nicht mehr um Mobbing.
 Jetzt geht’s um den kaputten Laptop.
 
-Fazit: Impulsivität lenkt vom eigentlichen Problem ab.</tw-passagedata><tw-passagedata pid="54" name="Szene4-RuhigGrenze" tags="" position="1725,2400" size="100,100">Du bleibst stehen.
+Fazit: Impulsivität lenkt vom eigentlichen Problem ab.</tw-passagedata><tw-passagedata pid="50" name="Szene4-RuhigGrenze" tags="" position="1725,2400" size="100,100">Du bleibst stehen.
 
 „Lasst das“, sagst du ruhig.
 „Das geht zu weit.“
@@ -1735,7 +1273,7 @@ In den nächsten Wochen lernst du:
 Du hast nicht jeden Konflikt gewonnen.
 Aber du hast verstanden, wie man Konflikte liest.
 Gewaltprävention beginnt nicht erst beim Eingreifen.
-Sie beginnt beim Erkennen.</tw-passagedata><tw-passagedata pid="55" name="Szene4-Troll" tags="" position="1500,2350" size="100,100">Du grinst.
+Sie beginnt beim Erkennen.</tw-passagedata><tw-passagedata pid="51" name="Szene4-Troll" tags="" position="1500,2350" size="100,100">Du grinst.
 
 „Krass“, sagst du.
 „Habt ihr das Meme auch an den Azubi‑Verteiler geschickt oder nur intern?“
